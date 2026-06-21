@@ -18,15 +18,12 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    /* DEEP MIDNIGHT BACKGROUND */
     .stApp {
         background-color: #09090b;
         color: #fafafa;
     }
     header {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    /* SLEEK TABS (Segmented Control Style) */
     .stTabs [data-baseweb="tab-list"] {
         gap: 4px;
         background-color: #18181b;
@@ -48,8 +45,6 @@ st.markdown("""
         color: white;
         box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
     }
-
-    /* SOFT SUBHEADERS */
     h3 {
         color: #d4d4d8 !important;
         font-size: 1rem !important;
@@ -61,8 +56,6 @@ st.markdown("""
         border-bottom: 1px solid #27272a;
         padding-bottom: 12px;
     }
-
-    /* SOFT, ROUNDED INPUTS */
     .stSlider > div > div > div > div {
         background: linear-gradient(90deg, #e11d48 0%, #f43f5e 100%);
         border-radius: 10px;
@@ -81,14 +74,10 @@ st.markdown("""
         border-radius: 10px;
         padding: 8px;
     }
-    
-    /* Remove default focus rings for a cleaner look */
     .stNumberInput:focus-within, .stMultiSelect:focus-within {
         border-color: #e11d48 !important;
         box-shadow: 0 0 0 1px #e11d48 !important;
     }
-
-    /* PREDICT BUTTON */
     .stButton > button[kind="primary"] {
         background: linear-gradient(90deg, #be123c 0%, #f59e0b 100%);
         color: #09090b;
@@ -106,10 +95,6 @@ st.markdown("""
         box-shadow: 0 12px 28px rgba(190, 18, 60, 0.5);
         background: linear-gradient(90deg, #e11d48 0%, #fbbf24 100%);
     }
-
-    /* ==========================================
-       PREDICTION AREA (100% UNTOUCHED EXACT CSS)
-       ========================================== */
     .result-box {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
@@ -126,8 +111,6 @@ st.markdown("""
         color: #f9d423 !important;
         text-shadow: 0 0 15px rgba(249, 212, 35, 0.8);
     }
-
-    /* ELEGANT METRIC CARDS */
     .metric-card {
         background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%);
         border: 1px solid #27272a;
@@ -153,7 +136,6 @@ st.markdown("""
         margin-top: 8px;
         font-weight: 500;
     }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -171,28 +153,25 @@ with header_col2:
 st.markdown("<hr style='border: 0; height: 1px; background-color: #27272a; margin: 15px 0 35px 0;'>", unsafe_allow_html=True)
 
 # ==========================================
-# 3. LOAD OR BUILD AI MODEL (UNBREAKABLE VERSION)
+# 3. LOAD OR BUILD AI MODEL
 # ==========================================
 @st.cache_resource
 def get_model():
     model_path = "models/best_model.pkl"
     mlb_path = "models/genre_encoder.pkl"
     
-    # Try to load the pre-trained model
     if os.path.exists(model_path):
         try:
             model = joblib.load(model_path)
             mlb = joblib.load(mlb_path)
-            return model, mlb, False # False means it didn't have to train
+            return model, mlb, False
         except Exception:
-            pass # If it fails (like the _loss error), we will just build it!
+            pass
 
-    # If file is missing OR broken, train a new one right now!
     os.makedirs("models", exist_ok=True)
     
-        with st.status("🧠 Initializing AI model on cloud (takes ~20 seconds)...", expanded=True) as status:
+    with st.status("🧠 Initializing AI model on cloud (takes ~20 seconds)...", expanded=True) as status:
         st.write("Loading local dataset...")
-        # Read the file that Streamlit Cloud already downloaded from GitHub
         df = pd.read_csv("data/processed/cleaned_movies.csv", encoding='latin-1')
         df = df.dropna(subset=['year', 'duration', 'votes', 'rating', 'genre'])
         
@@ -215,12 +194,10 @@ def get_model():
         
         status.update(label="✅ Cloud AI successfully built and saved!", state="complete", expanded=False)
         
-    return model, mlb, True # True means it had to train
+    return model, mlb, True
 
-# Load the model (it will train if it needs to)
 model, mlb, was_trained = get_model()
 
-# Session state for Analytics Tab
 if 'latest_prediction' not in st.session_state:
     st.session_state.latest_prediction = None
 if 'latest_inputs' not in st.session_state:
@@ -231,9 +208,6 @@ if 'latest_inputs' not in st.session_state:
 # ==========================================
 tab1, tab2, tab3 = st.tabs(["⚡ Predict", "📊 Analytics", "ℹ️ About"])
 
-# ==========================================
-# TAB 1: PREDICT (YOUR EXACT LOGIC & OUTPUT)
-# ==========================================
 with tab1:
     st.subheader("Configure Parameters")
     
@@ -286,7 +260,6 @@ with tab1:
                 quote = '"A box office disaster. Rewrite the script."'
                 emoji = "💀"
                 
-            # EXACT ORIGINAL HTML PREDICTION BOX
             result_html = f"""
             <div class="result-box">
                 <h2 style="color: white; margin-bottom: 10px;">AI PREDICTED RATING</h2>
@@ -298,9 +271,6 @@ with tab1:
             st.markdown(result_html, unsafe_allow_html=True)
             st.balloons()
 
-# ==========================================
-# TAB 2: ANALYTICS
-# ==========================================
 with tab2:
     st.markdown("### Forecast Breakdown")
     st.markdown("<span style='color: #71717a;'>Generate a prediction in the 'Predict' tab to view algorithmic insights here.</span>", unsafe_allow_html=True)
@@ -339,9 +309,6 @@ with tab2:
     else:
         st.info("👋 Awaiting prediction data...")
 
-# ==========================================
-# TAB 3: ABOUT
-# ==========================================
 with tab3:
     st.markdown("### System Architecture")
     st.markdown("""
