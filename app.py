@@ -2,6 +2,9 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+import os
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.preprocessing import MultiLabelBinarizer
 
 # ==========================================
 # 1. PREMIUM MIDNIGHT & ROSE GOLD THEME
@@ -85,7 +88,7 @@ st.markdown("""
         box-shadow: 0 0 0 1px #e11d48 !important;
     }
 
-    /* PREDICT BUTTON (Kept your Red/Gold vibe but smoothed) */
+    /* PREDICT BUTTON */
     .stButton > button[kind="primary"] {
         background: linear-gradient(90deg, #be123c 0%, #f59e0b 100%);
         color: #09090b;
@@ -168,19 +171,54 @@ with header_col2:
 st.markdown("<hr style='border: 0; height: 1px; background-color: #27272a; margin: 15px 0 35px 0;'>", unsafe_allow_html=True)
 
 # ==========================================
-# 3. LOAD AI MODEL
+# 3. LOAD OR BUILD AI MODEL (UNBREAKABLE VERSION)
 # ==========================================
 @st.cache_resource
-def load_model():
-    model = joblib.load("models/best_model.pkl")
-    mlb = joblib.load("models/genre_encoder.pkl")
-    return model, mlb
+def get_model():
+    model_path = "models/best_model.pkl"
+    mlb_path = "models/genre_encoder.pkl"
+    
+    # Try to load the pre-trained model
+    if os.path.exists(model_path):
+        try:
+            model = joblib.load(model_path)
+            mlb = joblib.load(mlb_path)
+            return model, mlb, False # False means it didn't have to train
+        except Exception:
+            pass # If it fails (like the _loss error), we will just build it!
 
-try:
-    model, mlb = load_model()
-except FileNotFoundError:
-    st.error("🚨 AI Model not found! Please run `python step5_advanced_model.py` first.")
-    st.stop()
+    # If file is missing OR broken, train a new one right now!
+    os.makedirs("models", exist_ok=True)
+    
+    with st.status("🧠 Server gears mismatch detected. Training AI model on cloud (takes ~20 seconds)...", expanded=True) as status:
+        st.write("Downloading dataset...")
+        # URL pointing to YOUR specific GitHub repository
+        df = pd.read_csv("https://raw.githubusercontent.com/Mira110/movie-rating-prediction/main/movie-rating-project/data/processed/cleaned_movies.csv", encoding='latin-1')
+        df = df.dropna(subset=['year', 'duration', 'votes', 'rating', 'genre'])
+        
+        st.write("Processing genres...")
+        df['genre_list'] = df['genre'].apply(lambda x: [g.strip() for g in x.split(',')])
+        mlb = MultiLabelBinarizer()
+        genre_matrix = mlb.fit_transform(df['genre_list'])
+        genre_df = pd.DataFrame(genre_matrix, columns=mlb.classes_)
+        
+        st.write("Firing up Gradient Boosting algorithm...")
+        X = pd.concat([df[['year', 'duration', 'votes']].reset_index(drop=True), genre_df], axis=1)
+        y = df['rating']
+        
+        model = GradientBoostingRegressor(n_estimators=100, random_state=42)
+        model.fit(X, y)
+        
+        st.write("Saving new model to server memory...")
+        joblib.dump(model, model_path)
+        joblib.dump(mlb, mlb_path)
+        
+        status.update(label="✅ Cloud AI successfully built and saved!", state="complete", expanded=False)
+        
+    return model, mlb, True # True means it had to train
+
+# Load the model (it will train if it needs to)
+model, mlb, was_trained = get_model()
 
 # Session state for Analytics Tab
 if 'latest_prediction' not in st.session_state:
