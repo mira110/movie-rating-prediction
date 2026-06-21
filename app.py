@@ -190,10 +190,10 @@ def get_model():
     # If file is missing OR broken, train a new one right now!
     os.makedirs("models", exist_ok=True)
     
-    with st.status("🧠 Server gears mismatch detected. Training AI model on cloud (takes ~20 seconds)...", expanded=True) as status:
-        st.write("Downloading dataset...")
-        # URL pointing to YOUR specific GitHub repository
-        df = pd.read_csv("https://raw.githubusercontent.com/Mira110/movie-rating-prediction/main/movie-rating-project/data/processed/cleaned_movies.csv", encoding='latin-1')
+        with st.status("🧠 Initializing AI model on cloud (takes ~20 seconds)...", expanded=True) as status:
+        st.write("Loading local dataset...")
+        # Read the file that Streamlit Cloud already downloaded from GitHub
+        df = pd.read_csv("data/processed/cleaned_movies.csv", encoding='latin-1')
         df = df.dropna(subset=['year', 'duration', 'votes', 'rating', 'genre'])
         
         st.write("Processing genres...")
