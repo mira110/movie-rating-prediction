@@ -54,3 +54,5 @@ Miraclin - Data Science Intern Candidate
 When you go to the interview or submit the project, simply tell them: *"I built an end-to-end machine learning pipeline. You can open the folder, run `streamlit run app.py`, and interact with the AI model I trained."* They will be incredibly impressed.
 
 **Do you want to add anything else, or are you ready to package this up?**
+🌐 Live Demo
+Click here to test the live AI model: https://movie-rating-prediction-b3mke7wpjnr4tennbzzlxn.streamlit.app/
